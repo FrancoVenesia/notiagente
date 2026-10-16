@@ -1,7 +1,7 @@
-"""Guarda y recupera news.db en la rama "datos" del repositorio, sin cambiar de rama.
+"""Guarda y recupera news.db en la rama "claude/datos" del repositorio, sin cambiar de rama.
 
-    python sync_db.py pull   # trae news.db desde origin/datos (si existe)
-    python sync_db.py push   # commitea news.db en datos y lo sube
+    python sync_db.py pull   # trae news.db desde origin/claude/datos (si existe)
+    python sync_db.py push   # commitea news.db en claude/datos y lo sube
 
 Usa comandos internos de git (hash-object / mktree / commit-tree), así el código en main
 no se toca y la base no ensucia el historial principal.
@@ -14,7 +14,8 @@ from datetime import datetime, timezone
 
 from db import DB_PATH
 
-BRANCH = "datos"
+# Las sesiones en la nube de Claude Code solo pueden pushear a ramas "claude/..."
+BRANCH = "claude/datos"
 REF = f"refs/remotes/origin/{BRANCH}"
 
 

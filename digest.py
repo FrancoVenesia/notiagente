@@ -84,8 +84,19 @@ def build_digest(conn, hours: int, limit: int) -> tuple[list[str], list[int]]:
     return messages, [s["id"] for s in analyzed]
 
 
+def clean_env(name: str) -> str:
+    """Lee una variable tolerando errores comunes al cargarla en un panel web:
+    espacios, comillas o el "NOMBRE=" pegado como parte del valor."""
+    value = os.environ.get(name, "").strip().strip('"').strip("'").strip()
+    if value.startswith(f"{name}="):
+        value = value[len(name) + 1:].strip().strip('"').strip("'")
+    return value
+
+
 def telegram(method: str, **payload) -> dict:
-    token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    token = clean_env("TELEGRAM_BOT_TOKEN")
+    if token.lower().startswith("bot"):
+        token = token[3:]  # la URL ya agrega el prefijo "bot"
     if not token:
         sys.exit("Falta TELEGRAM_BOT_TOKEN en .env (ver .env.example).")
     resp = requests.post(TELEGRAM_API.format(token=token, method=method), json=payload, timeout=30)
@@ -96,7 +107,7 @@ def telegram(method: str, **payload) -> dict:
 
 
 def send(messages: list[str]) -> None:
-    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+    chat_id = clean_env("TELEGRAM_CHAT_ID")
     if not chat_id:
         sys.exit("Falta TELEGRAM_CHAT_ID en .env. Obtenelo con: python digest.py --get-chat-id")
     for text in messages:
