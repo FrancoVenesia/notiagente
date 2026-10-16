@@ -11,6 +11,7 @@ import html
 import json
 import os
 import sys
+import time
 from datetime import datetime, timedelta, timezone
 
 import requests
@@ -21,6 +22,7 @@ load_env()
 TELEGRAM_API = "https://api.telegram.org/bot{token}/{method}"
 TELEGRAM_LIMIT = 4096
 MAX_BULLETS = 3
+RETRIES = 4
 
 
 def esc(text: str) -> str:
@@ -99,11 +101,23 @@ def telegram(method: str, **payload) -> dict:
         token = token[3:]  # la URL ya agrega el prefijo "bot"
     if not token:
         sys.exit("Falta TELEGRAM_BOT_TOKEN en .env (ver .env.example).")
-    resp = requests.post(TELEGRAM_API.format(token=token, method=method), json=payload, timeout=30)
-    data = resp.json()
-    if not data.get("ok"):
+    url = TELEGRAM_API.format(token=token, method=method)
+    # Reintentos ante cortes de red (vistos en la nube) y ante límites de Telegram (429)
+    for attempt in range(1, RETRIES + 1):
+        try:
+            data = requests.post(url, json=payload, timeout=30).json()
+        except (requests.ConnectionError, requests.Timeout):
+            if attempt == RETRIES:
+                raise
+            time.sleep(2 ** attempt)
+            continue
+        if data.get("ok"):
+            return data["result"]
+        retry_after = data.get("parameters", {}).get("retry_after")
+        if retry_after and attempt < RETRIES:
+            time.sleep(retry_after)
+            continue
         raise RuntimeError(f"Telegram {method}: {data.get('description')}")
-    return data["result"]
 
 
 def send(messages: list[str]) -> None:
