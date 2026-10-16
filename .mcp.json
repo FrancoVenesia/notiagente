@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "noticias": {
+      "command": "python",
+      "args": ["C:\\Users\\Franco\\OneDrive\\Repositorios\\NotiAgente\\mcp_server.py"]
+    }
+  }
+}

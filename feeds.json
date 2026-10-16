@@ -1,0 +1,14 @@
+{
+  "economia": [
+    {"name": "Ámbito", "url": "https://www.ambito.com/rss/pages/economia.xml"},
+    {"name": "Infobae", "url": "https://www.infobae.com/arc/outboundfeeds/rss/category/economia/"},
+    {"name": "La Nación", "url": "https://www.lanacion.com.ar/arc/outboundfeeds/rss/category/economia/?outputType=xml"},
+    {"name": "Clarín", "url": "https://www.clarin.com/rss/economia/"},
+    {"name": "Perfil", "url": "https://www.perfil.com/feed/economia"},
+    {"name": "iProfesional", "url": "https://www.iprofesional.com/rss/economia"},
+    {"name": "BBC Mundo", "url": "https://feeds.bbci.co.uk/mundo/temas/economia/rss.xml"},
+    {"name": "El País", "url": "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/economia/portada"},
+    {"name": "Google News", "url": "https://news.google.com/rss/search?q=econom%C3%ADa+argentina+when:1d&hl=es-419&gl=AR&ceid=AR:es-419"},
+    {"name": "Google News", "url": "https://news.google.com/rss/search?q=d%C3%B3lar+OR+inflaci%C3%B3n+OR+%22riesgo+pa%C3%ADs%22+when:1d&hl=es-419&gl=AR&ceid=AR:es-419"}
+  ]
+}

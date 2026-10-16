@@ -1,0 +1,14 @@
+{
+  "enableAllProjectMcpServers": true,
+  "permissions": {
+    "allow": [
+      "mcp__noticias__preparar_datos",
+      "mcp__noticias__listar_clusters",
+      "mcp__noticias__guardar_agrupamiento",
+      "mcp__noticias__stories_pendientes",
+      "mcp__noticias__leer_story",
+      "mcp__noticias__guardar_analisis",
+      "mcp__noticias__enviar_resumen"
+    ]
+  }
+}
