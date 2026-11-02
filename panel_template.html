@@ -1,0 +1,474 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Panel NotiAgente</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,650&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: mesa de redacción — tira del proceso arriba, perfil de medios, y un banco de trabajo
+   (lista de noticias | paso a paso) abajo. Tinta azul sobre papel frío; los 5 tipos de afirmación
+   son la única paleta fuerte de la página. */
+:root {
+  --paper: #f4f6f8; --surface: #ffffff; --ink: #14202b; --muted: #5a6774; --line: #d9e0e6;
+  --accent: #2c6a99; --accent-soft: #e2edf6;
+  --hecho: #23798a; --declaracion: #5f52c4; --interpretacion: #b57a12; --opinion: #bf3855; --prediccion: #3f8a33;
+  --t-neutral: #6f7d8a; --t-critico: #bf3855; --t-favorable: #3f8a33; --t-cauteloso: #b57a12;
+  --t-alarmista: #a8331a; --t-otro: #98a3ae;
+  --bubble: #e6f1e1; --bubble-ink: #1b2a1a;
+  --f-display: "Newsreader", "Iowan Old Style", Georgia, serif;
+  --f-body: "Public Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --r: 6px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #0e151c; --surface: #15202a; --ink: #e3e9ef; --muted: #93a0ad; --line: #26323e;
+  --accent: #6ea7d4; --accent-soft: #1b2c3b;
+  --hecho: #4cb2c3; --declaracion: #9a8cf0; --interpretacion: #e2a83d; --opinion: #ee6e87; --prediccion: #78c169;
+  --t-neutral: #8c9aa7; --t-critico: #ee6e87; --t-favorable: #78c169; --t-cauteloso: #e2a83d;
+  --t-alarmista: #f0835f; --t-otro: #6d7a86;
+  --bubble: #1f3323; --bubble-ink: #dcebd8; color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --paper: #0e151c; --surface: #15202a; --ink: #e3e9ef; --muted: #93a0ad; --line: #26323e;
+  --accent: #6ea7d4; --accent-soft: #1b2c3b;
+  --hecho: #4cb2c3; --declaracion: #9a8cf0; --interpretacion: #e2a83d; --opinion: #ee6e87; --prediccion: #78c169;
+  --t-neutral: #8c9aa7; --t-critico: #ee6e87; --t-favorable: #78c169; --t-cauteloso: #e2a83d;
+  --t-alarmista: #f0835f; --t-otro: #6d7a86;
+  --bubble: #1f3323; --bubble-ink: #dcebd8; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font: 15px/1.55 var(--f-body); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-block: 28px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 40px; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 650; text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: clamp(1.9rem, 4vw, 2.6rem); line-height: 1.1; }
+h2 { font-size: 1.45rem; }
+h3 { font-size: 1.1rem; font-weight: 500; }
+p { margin: 0; }
+a { color: var(--accent); }
+.eyebrow { font: 500 0.72rem/1 var(--f-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.muted { color: var(--muted); }
+.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+section { display: grid; gap: 16px; }
+.sec-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; }
+.sec-head p { max-width: 62ch; }
+
+/* encabezado */
+header { display: grid; gap: 10px; }
+header .lede { max-width: 66ch; color: var(--muted); }
+
+/* tira del proceso */
+.pipeline { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); border: 1px solid var(--line);
+  border-radius: var(--r); background: var(--surface); overflow: hidden; }
+.pipe { padding: 14px 16px; display: grid; gap: 4px; align-content: start; border-left: 1px solid var(--line); position: relative; }
+.pipe:first-child { border-left: 0; }
+.pipe .n { font: 500 0.72rem/1 var(--f-mono); color: var(--accent); }
+.pipe .v { font: 500 1.6rem/1.15 var(--f-mono); font-variant-numeric: tabular-nums; }
+.pipe .l { font-weight: 600; font-size: 0.9rem; }
+.pipe .d { font-size: 0.8rem; color: var(--muted); }
+@media (max-width: 900px) { .pipeline { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .pipe:nth-child(4) { border-left: 0; } .pipe:nth-child(n+4) { border-top: 1px solid var(--line); } }
+@media (max-width: 520px) { .pipeline { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pipe:nth-child(odd) { border-left: 0; } .pipe:nth-child(4) { border-left: 1px solid var(--line); }
+  .pipe:nth-child(n+3) { border-top: 1px solid var(--line); } }
+
+/* leyenda de tipos */
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.82rem; }
+.legend span, .chip { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 10px; height: 10px; border-radius: 2px; flex: none; background: var(--c); }
+.k-hecho { --c: var(--hecho); } .k-declaracion { --c: var(--declaracion); } .k-interpretacion { --c: var(--interpretacion); }
+.k-opinion { --c: var(--opinion); } .k-prediccion { --c: var(--prediccion); }
+.t-neutral { --c: var(--t-neutral); } .t-crítico { --c: var(--t-critico); } .t-favorable { --c: var(--t-favorable); }
+.t-cauteloso { --c: var(--t-cauteloso); } .t-alarmista { --c: var(--t-alarmista); } .t-otro { --c: var(--t-otro); }
+
+/* perfil de medios */
+.profile { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 860px) { .profile { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.outlet { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr) 3.4rem; gap: 6px 12px; align-items: center; }
+.outlet .name { font-weight: 600; font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.outlet .obj { text-align: right; font: 500 0.9rem var(--f-mono); }
+.outlet .tones { grid-column: 2 / 4; display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 0.75rem; color: var(--muted); }
+.stack { display: flex; height: 14px; border-radius: 3px; overflow: hidden; background: var(--line); }
+.stack i { display: block; height: 100%; background: var(--c); }
+.outlets { display: grid; gap: 14px; }
+.chart svg { width: 100%; height: auto; display: block; }
+.chart text { fill: var(--muted); font: 10px var(--f-mono); }
+.chart .grid { stroke: var(--line); }
+
+/* banco de trabajo */
+.bench { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 860px) { .bench { grid-template-columns: minmax(0, 1fr); } }
+.picker { display: grid; gap: 10px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+@media (max-width: 860px) { .picker { position: static; } }
+.picker select { width: 100%; font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--r);
+  background: var(--surface); color: var(--ink); }
+.stories { display: grid; gap: 2px; max-height: 70vh; overflow-y: auto; border: 1px solid var(--line); border-radius: var(--r);
+  background: var(--surface); padding: 4px; }
+@media (max-width: 860px) { .stories { max-height: 260px; } }
+.story-btn { all: unset; cursor: pointer; display: grid; gap: 4px; padding: 10px 12px; border-radius: 4px; }
+.story-btn:hover { background: var(--accent-soft); }
+.story-btn[aria-current="true"] { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+.story-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.story-btn .t { font-size: 0.88rem; font-weight: 500; line-height: 1.35; }
+.story-btn .meta { display: flex; gap: 10px; font: 0.72rem var(--f-mono); color: var(--muted); }
+.imp { letter-spacing: 1px; color: var(--accent); }
+
+.viewer { display: grid; gap: 16px; min-width: 0; }
+.story-head { display: grid; gap: 6px; }
+.story-head h2 { font-size: 1.6rem; line-height: 1.2; }
+.steps { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+@media (max-width: 640px) { .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.step-tab { all: unset; cursor: pointer; display: grid; gap: 2px; padding: 8px 10px; border-radius: 4px;
+  border: 1px solid var(--line); background: var(--surface); }
+.step-tab .n { font: 500 0.7rem var(--f-mono); color: var(--muted); }
+.step-tab .l { font-size: 0.82rem; font-weight: 600; line-height: 1.2; }
+.step-tab[aria-selected="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.step-tab[aria-selected="true"] .n { color: var(--accent); }
+.step-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.stage { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 20px; display: grid; gap: 16px; min-width: 0; }
+.stage .what { max-width: 68ch; }
+.nav { display: flex; justify-content: space-between; gap: 12px; }
+.btn { font: 600 0.85rem var(--f-body); padding: 8px 14px; border-radius: var(--r); border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink); cursor: pointer; }
+.btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.btn:disabled { opacity: 0.4; cursor: default; }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.src-group { display: grid; gap: 4px; }
+.src-group h4 { margin: 0; font-size: 0.85rem; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.src-group ul { margin: 0; padding-left: 18px; display: grid; gap: 2px; font-size: 0.86rem; }
+.badge { font: 500 0.68rem var(--f-mono); padding: 2px 6px; border-radius: 3px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.badge.on { border-color: var(--accent); color: var(--accent); }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.card { border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.card ul { margin: 0; padding-left: 18px; font-size: 0.85rem; display: grid; gap: 2px; }
+.arrow-note { font-size: 0.85rem; color: var(--muted); }
+
+.filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.fbtn { all: unset; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; font-size: 0.8rem; padding: 4px 10px;
+  border-radius: 999px; border: 1px solid var(--line); }
+.fbtn[aria-pressed="false"] { opacity: 0.45; }
+.fbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.art { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--line); }
+.art:first-child { border-top: 0; padding-top: 0; }
+.art-head { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; justify-content: space-between; }
+.art-head .stack { width: 160px; height: 10px; }
+.claim { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: 10px; font-size: 0.88rem; padding: 4px 0; }
+.claim .kind { font: 500 0.72rem var(--f-mono); color: var(--c); display: flex; gap: 6px; align-items: center; padding-top: 2px; }
+.claim .by { color: var(--muted); font-size: 0.8rem; }
+@media (max-width: 520px) { .claim { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
+
+.fact { display: grid; gap: 4px; font-size: 0.88rem; }
+.medios { display: flex; flex-wrap: wrap; gap: 4px; }
+.discrep { display: grid; gap: 8px; }
+.versions { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
+.version { border-left: 3px solid var(--t-cauteloso); padding: 4px 10px; font-size: 0.86rem; }
+.frame { display: grid; gap: 6px; }
+.tone { display: inline-flex; align-items: center; gap: 6px; font: 600 0.78rem var(--f-body); color: var(--c); }
+.tone .sw { border-radius: 50%; }
+.kv { display: grid; grid-template-columns: 5.2rem minmax(0, 1fr); gap: 2px 10px; font-size: 0.85rem; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; }
+
+.phone { max-width: 460px; background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+.bubble { background: var(--bubble); color: var(--bubble-ink); border-radius: 12px 12px 12px 4px; padding: 10px 12px;
+  font-size: 0.9rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+.bubble a { color: inherit; }
+.bubble .time { display: block; text-align: right; font: 0.7rem var(--f-mono); opacity: 0.6; margin-top: 4px; }
+footer { font-size: 0.8rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+@media (prefers-reduced-motion: no-preference) { .stage { animation: fade 0.18s ease-out; }
+  @keyframes fade { from { opacity: 0.6; } to { opacity: 1; } } }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow" id="period"></span>
+    <h1>Panel NotiAgente</h1>
+    <p class="lede">Cómo el agente convierte las notas de economía de distintos medios en un resumen que separa
+      hechos verificables de interpretaciones, y con qué tono cuenta cada medio la misma noticia.</p>
+  </header>
+
+  <section aria-labelledby="h-proc">
+    <div class="sec-head"><h2 id="h-proc">El proceso completo</h2>
+      <p class="muted">Totales acumulados desde que el agente empezó a correr.</p></div>
+    <div class="pipeline" id="pipeline"></div>
+  </section>
+
+  <section aria-labelledby="h-medios">
+    <div class="sec-head"><h2 id="h-medios">Cómo informa cada medio</h2>
+      <p class="muted">Composición de las afirmaciones que el agente extrajo de cada medio. "Objetivo" es la parte que
+        son hechos o declaraciones atribuidas; el resto es interpretación, opinión o predicción del propio medio.</p></div>
+    <div class="legend" id="legend"></div>
+    <div class="profile">
+      <div class="panel"><div class="outlets" id="outlets"></div></div>
+      <div class="panel chart">
+        <div><h3>Afirmaciones por día</h3><p class="muted" style="font-size:.82rem">Según el tipo, en las noticias analizadas cada mañana.</p></div>
+        <div id="daily"></div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-paso">
+    <div class="sec-head"><h2 id="h-paso">Una noticia, paso a paso</h2>
+      <p class="muted">Elegí una noticia y recorré los seis pasos que hace el agente. Usá ← y → para avanzar.</p></div>
+    <div class="bench">
+      <div class="picker">
+        <label class="eyebrow" for="day">Día</label>
+        <select id="day"></select>
+        <div class="stories" id="stories" role="list"></div>
+      </div>
+      <div class="viewer" id="viewer"></div>
+    </div>
+  </section>
+
+  <footer id="foot"></footer>
+</div>
+
+<script>
+const DATA = /*__DATA__*/null;
+const LABEL = { hecho: "Hecho", declaracion: "Declaración", interpretacion: "Interpretación", opinion: "Opinión", prediccion: "Predicción" };
+const TONES = ["neutral", "cauteloso", "crítico", "alarmista", "favorable", "otro"];
+const STEPS = [
+  ["Recolección", "Qué publicaron los medios"],
+  ["Agrupamiento", "Qué notas son la misma noticia"],
+  ["Afirmaciones", "Qué dice cada nota, clasificado"],
+  ["Cruce de fuentes", "Qué coincide y qué no"],
+  ["Encuadre y tono", "Cómo lo cuenta cada medio"],
+  ["Resumen enviado", "Lo que llegó a Telegram"],
+];
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = (n) => Number(n).toLocaleString("es-AR");
+const fmtDay = (d) => new Date(d + "T12:00:00").toLocaleDateString("es-AR", { weekday: "short", day: "numeric", month: "short" });
+const safeUrl = (u) => /^https?:\/\//i.test(u || "") ? esc(u) : "#";
+const stackBar = (counts) => {
+  const total = DATA.types.reduce((s, k) => s + (counts[k] || 0), 0) || 1;
+  return `<div class="stack" role="img" aria-label="${DATA.types.map((k) => `${LABEL[k]} ${counts[k] || 0}`).join(", ")}">` +
+    DATA.types.map((k) => counts[k] ? `<i class="k-${k}" style="width:${(counts[k] / total * 100).toFixed(2)}%" title="${LABEL[k]}: ${counts[k]}"></i>` : "").join("") + "</div>";
+};
+const toneChip = (cat, text) => `<span class="tone t-${esc(cat)}"><i class="sw"></i>${esc(text || cat)}</span>`;
+
+/* ---------- resumen general ---------- */
+function renderOverview() {
+  const f = DATA.funnel;
+  $("#period").textContent = `Prensa económica argentina · ${fmtDay(DATA.period[0])} – ${fmtDay(DATA.period[1])}`;
+  const pipe = [
+    [f.articulos, "Notas leídas", `de ${f.medios_rss} medios por RSS y ${fmt(f.medios - f.medios_rss)} más vía Google News`],
+    [f.clusters, "Clusters", "notas casi idénticas unidas"],
+    [f.stories, "Noticias", "clusters unidos por Claude"],
+    [f.analizadas, "Analizadas", "las más relevantes de cada día"],
+    [f.afirmaciones, "Afirmaciones", "clasificadas en 5 tipos"],
+    [f.enviadas, "Enviadas", "dentro del resumen de Telegram"],
+  ];
+  $("#pipeline").innerHTML = pipe.map(([v, l, d], i) =>
+    `<div class="pipe"><span class="n">${i + 1}</span><span class="v">${fmt(v)}</span><span class="l">${l}</span><span class="d">${d}</span></div>`).join("");
+
+  $("#legend").innerHTML = DATA.types.map((k) => `<span class="k-${k}"><i class="sw"></i>${LABEL[k]}</span>`).join("");
+
+  $("#outlets").innerHTML = DATA.outlets.map((o) => {
+    const obj = Math.round((o.types.hecho + o.types.declaracion) / o.total * 100);
+    const tones = TONES.filter((t) => o.tones[t]).map((t) => `<span class="chip t-${t}"><i class="sw" style="border-radius:50%"></i>${t} ${o.tones[t]}</span>`).join("");
+    return `<div class="outlet"><span class="name" title="${esc(o.m)}">${esc(o.m)}</span>${stackBar(o.types)}
+      <span class="obj" title="Afirmaciones objetivas: hechos + declaraciones">${obj}%</span>
+      <div class="tones"><span>Tono:</span>${tones || "—"}<span>· ${fmt(o.total)} afirmaciones</span></div></div>`;
+  }).join("") + `<p class="muted" style="font-size:.78rem">Ordenados de más a menos objetivo. Solo medios con 30 afirmaciones o más.</p>`;
+  renderDaily();
+}
+
+function renderDaily() {
+  const rows = DATA.daily;
+  if (!rows.length) { $("#daily").innerHTML = '<p class="muted">Todavía no hay análisis.</p>'; return; }
+  const W = 520, H = 240, L = 34, B = 26, T = 10, R = 6;
+  const totals = rows.map((r) => DATA.types.reduce((s, k) => s + r[k], 0));
+  const step = Math.max(10, Math.ceil(Math.max(...totals) / 4 / 10) * 10);
+  const max = step * 4;
+  const y = (v) => T + (H - T - B) * (1 - v / max);
+  const bw = (W - L - R) / rows.length;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Afirmaciones por día y tipo">`;
+  for (let v = 0; v <= max; v += step)
+    svg += `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 6}" y="${y(v) + 3}" text-anchor="end">${v}</text>`;
+  rows.forEach((r, i) => {
+    let acc = 0;
+    const x = L + i * bw + bw * 0.15, w = bw * 0.7;
+    DATA.types.forEach((k) => {
+      if (!r[k]) return;
+      svg += `<rect class="k-${k}" style="fill:var(--c)" x="${x.toFixed(1)}" y="${y(acc + r[k]).toFixed(1)}" width="${w.toFixed(1)}" height="${(y(acc) - y(acc + r[k])).toFixed(1)}"><title>${fmtDay(r.d)} · ${LABEL[k]}: ${r[k]}</title></rect>`;
+      acc += r[k];
+    });
+    const every = Math.ceil(rows.length / 8);
+    if (i % every === 0 || i === rows.length - 1)
+      svg += `<text x="${(x + w / 2).toFixed(1)}" y="${H - 8}" text-anchor="middle">${r.d.slice(8, 10)}/${r.d.slice(5, 7)}</text>`;
+  });
+  $("#daily").innerHTML = svg + "</svg>";
+}
+
+/* ---------- explorador ---------- */
+const state = { day: null, id: null, step: 0, filter: new Set(DATA.types) };
+
+function renderPicker() {
+  const sel = $("#day");
+  sel.innerHTML = DATA.days.map((d) => `<option value="${d.d}">${fmtDay(d.d)} · ${d.ids.length} noticias</option>`).join("");
+  sel.value = state.day;
+  sel.onchange = () => { state.day = sel.value; selectStory(DATA.days.find((d) => d.d === state.day).ids[0]); };
+  renderStoryList();
+}
+
+function renderStoryList() {
+  const ids = DATA.days.find((d) => d.d === state.day)?.ids || [];
+  $("#stories").innerHTML = ids.map((id) => {
+    const s = DATA.stories[id];
+    return `<button class="story-btn" role="listitem" data-id="${id}" aria-current="${id === state.id}">
+      <span class="t">${esc(s.title)}</span>
+      <span class="meta"><span class="imp" aria-label="Importancia ${s.importance} de 5">${"●".repeat(s.importance)}${"○".repeat(5 - s.importance)}</span>
+      <span>${s.analysis.total_medios} medios</span>${s.sent ? "<span>enviada</span>" : ""}</span></button>`;
+  }).join("");
+  $("#stories").querySelectorAll(".story-btn").forEach((b) => b.onclick = () => selectStory(+b.dataset.id));
+}
+
+function selectStory(id, step = 0) {
+  if (!DATA.stories[id]) return;
+  state.id = id; state.step = step; state.day = DATA.stories[id].day;
+  $("#day").value = state.day;
+  try { history.replaceState(null, "", "#s" + id); } catch (e) {}
+  renderStoryList(); renderViewer();
+}
+
+function renderViewer() {
+  const s = DATA.stories[state.id];
+  $("#viewer").innerHTML = `
+    <div class="story-head"><span class="eyebrow">${fmtDay(s.day)} · importancia ${s.importance}/5 · ${s.analysis.total_medios} medios</span>
+      <h2>${esc(s.title)}</h2></div>
+    <div class="steps" role="tablist" aria-label="Pasos del análisis">${STEPS.map(([l], i) =>
+      `<button class="step-tab" role="tab" aria-selected="${i === state.step}" data-step="${i}"><span class="n">Paso ${i + 1}</span><span class="l">${l}</span></button>`).join("")}</div>
+    <div class="stage" role="tabpanel">${STAGES[state.step](s)}</div>
+    <div class="nav"><button class="btn" id="prev" ${state.step === 0 ? "disabled" : ""}>← ${state.step > 0 ? STEPS[state.step - 1][0] : "Anterior"}</button>
+      <button class="btn" id="next" ${state.step === STEPS.length - 1 ? "disabled" : ""}>${state.step < STEPS.length - 1 ? STEPS[state.step + 1][0] : "Siguiente"} →</button></div>`;
+  $("#viewer").querySelectorAll(".step-tab").forEach((b) => b.onclick = () => goStep(+b.dataset.step));
+  $("#prev").onclick = () => goStep(state.step - 1);
+  $("#next").onclick = () => goStep(state.step + 1);
+  $("#viewer").querySelectorAll(".fbtn").forEach((b) => b.onclick = () => {
+    const k = b.dataset.k;
+    state.filter.has(k) ? state.filter.delete(k) : state.filter.add(k);
+    if (!state.filter.size) DATA.types.forEach((t) => state.filter.add(t));
+    renderViewer();
+  });
+  if (state.step === 5) fillTelegram(s);
+}
+
+function goStep(i) { if (i >= 0 && i < STEPS.length) { state.step = i; renderViewer(); } }
+
+const intro = (i, text) => `<div class="what"><span class="eyebrow">Paso ${i + 1} · ${STEPS[i][1]}</span><p style="margin-top:6px">${text}</p></div>`;
+
+const STAGES = [
+  // 1. Recolección
+  (s) => {
+    const groups = {};
+    s.articles.forEach((a) => (groups[a.m] ||= []).push(a));
+    const names = Object.keys(groups);
+    const withText = s.articles.filter((a) => a.txt).length;
+    return intro(0, `El agente leyó los RSS de los medios y encontró <b>${s.articles.length} notas</b> de <b>${names.length} medios</b> sobre este tema.
+      De ${withText} pudo bajar el texto completo; las que llegan por Google News solo aportan el título.`) +
+      `<div class="list">${names.map((m) => `<div class="src-group"><h4>${esc(m)}
+        ${groups[m].some((a) => a.used) ? '<span class="badge on">analizada</span>' : groups[m].some((a) => a.txt) ? '<span class="badge">texto completo</span>' : '<span class="badge">solo título</span>'}</h4>
+        <ul>${groups[m].slice(0, 3).map((a) => `<li><a href="${safeUrl(a.u)}" target="_blank" rel="noopener">${esc(a.t)}</a></li>`).join("")}</ul></div>`).join("")}</div>`;
+  },
+  // 2. Agrupamiento
+  (s) => intro(1, `Primero, Python unió las notas con títulos casi iguales en <b>clusters</b>. Después Claude reconoció que
+      ${s.clusters.length === 1 ? "este cluster era una noticia por sí solo" : `estos <b>${s.clusters.length} clusters</b> cubren el mismo hecho aunque lo titulen distinto, y los unió en una sola noticia`}.`) +
+    `<div class="cols">${s.clusters.map((c, i) => `<div class="card"><span class="eyebrow">Cluster ${i + 1} · ${c.n} ${c.n === 1 ? "nota" : "notas"}</span>
+      <ul>${c.titles.map((t) => `<li>${esc(t)}</li>`).join("")}</ul></div>`).join("")}</div>
+    <p class="arrow-note">→ Noticia unificada: <b>${esc(s.title)}</b></p>`,
+  // 3. Afirmaciones
+  (s) => {
+    const arts = [...new Set(s.claims.map((c) => c.a))];
+    const counts = {}; s.claims.forEach((c) => counts[c.k] = (counts[c.k] || 0) + 1);
+    return intro(2, `Claude leyó el texto completo de ${arts.length} ${arts.length === 1 ? "nota" : "notas"} (una por medio) y extrajo
+        <b>${s.claims.length} afirmaciones</b>. Cada una se clasificó según si se puede verificar o si es una lectura del medio.`) +
+      `<div class="filters" aria-label="Filtrar por tipo">${DATA.types.map((k) =>
+        `<button class="fbtn k-${k}" data-k="${k}" aria-pressed="${state.filter.has(k)}"><i class="sw"></i>${LABEL[k]} ${counts[k] || 0}</button>`).join("")}</div>
+      <div class="list">${arts.map((aid) => {
+        const cs = s.claims.filter((c) => c.a === aid);
+        const a = s.articles.find((x) => x.id === aid) || { m: cs[0].m, t: "", u: "" };
+        const ac = {}; cs.forEach((c) => ac[c.k] = (ac[c.k] || 0) + 1);
+        const shown = cs.filter((c) => state.filter.has(c.k));
+        return `<div class="art"><div class="art-head"><h3><a href="${safeUrl(a.u)}" target="_blank" rel="noopener">${esc(a.m)}</a></h3>${stackBar(ac)}</div>
+          <p class="muted" style="font-size:.84rem">${esc(a.t)}</p>
+          ${shown.map((c) => `<div class="claim k-${c.k}"><span class="kind"><i class="sw"></i>${LABEL[c.k]}</span>
+            <span>${esc(c.t)}${c.by ? ` <span class="by">— ${esc(c.by)}</span>` : ""}</span></div>`).join("") || '<p class="muted">Sin afirmaciones de los tipos elegidos.</p>'}</div>`;
+      }).join("")}</div>`;
+  },
+  // 4. Cruce de fuentes
+  (s) => {
+    const a = s.analysis;
+    const medios = (ms) => `<span class="medios">${ms.map((m) => `<span class="badge">${esc(m)}</span>`).join("")}</span>`;
+    return intro(3, `Se compararon los hechos entre medios. Lo que aparece en dos o más se da por <b>confirmado</b>; si los medios dan
+        cifras o versiones distintas de lo mismo, queda como <b>discrepancia</b>.`) +
+      `<div class="cols">
+        <div class="card"><span class="eyebrow">Confirmado por varios medios · ${a.hechos_confirmados.length}</span>
+          ${a.hechos_confirmados.map((h) => `<div class="fact"><span>${esc(h.texto)}</span>${medios(h.medios)}</div>`).join("") || '<p class="muted">Ningún hecho apareció en dos o más notas.</p>'}</div>
+        <div class="card"><span class="eyebrow">Lo informa un solo medio · ${a.hechos_fuente_unica.length}</span>
+          ${a.hechos_fuente_unica.map((h) => `<div class="fact"><span>${esc(h.texto)}</span>${medios(h.medios)}</div>`).join("") || '<p class="muted">Nada exclusivo de un solo medio.</p>'}</div>
+      </div>
+      <div class="discrep"><span class="eyebrow">Discrepancias · ${a.discrepancias.length}</span>
+        ${a.discrepancias.map((d) => `<div class="card"><b>${esc(d.tema)}</b><div class="versions">${d.versiones.map((v) =>
+          `<div class="version"><b>${esc(v.medio)}</b><br>${esc(v.dice)}</div>`).join("")}</div></div>`).join("") || '<p class="muted">Los medios coinciden en los datos.</p>'}</div>`;
+  },
+  // 5. Encuadre y tono
+  (s) => {
+    const a = s.analysis;
+    return intro(4, `Con los hechos separados, queda a la vista el <b>encuadre</b>: qué destaca cada medio, con qué tono y qué deja afuera.
+        El tono es la lectura de "sentimiento" del agente; acá se agrupa en neutral, cauteloso, crítico, alarmista o favorable.`) +
+      `<div class="cols">${a.encuadres.map((e) => `<div class="card frame"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
+          <h3><a href="${safeUrl(e.url)}" target="_blank" rel="noopener">${esc(e.medio)}</a></h3>${toneChip(e.cat, e.cat)}</div>
+          <dl class="kv"><dt>Destaca</dt><dd>${esc(e.enfasis)}</dd><dt>Tono</dt><dd>${esc(e.tono)}</dd>
+          ${e.omite ? `<dt>Omite</dt><dd>${esc(e.omite)}</dd>` : ""}</dl></div>`).join("")}</div>
+      ${a.encuadre_titulares ? `<div class="card"><span class="eyebrow">Cómo titularon los demás medios</span><p style="font-size:.88rem">${esc(a.encuadre_titulares)}</p></div>` : ""}`;
+  },
+  // 6. Resumen enviado
+  (s) => intro(5, `El resultado se arma como un mensaje de Telegram: un resumen neutral y los datos cruzados.
+      ${s.sent ? "Esta noticia se envió en el resumen de ese día." : "Esta noticia no llegó a enviarse."} Modelo: <span class="num">${esc(s.model)}</span>.`) +
+    `<div class="phone"><div class="bubble" id="tg"></div></div>`,
+];
+
+/* El mensaje usa el HTML reducido de Telegram: solo se conservan <b>, <i> y <a href="http…">. */
+function fillTelegram(s) {
+  const doc = new DOMParser().parseFromString(`<div>${s.telegram}</div>`, "text/html");
+  const out = $("#tg");
+  const walk = (node, parent) => node.childNodes.forEach((n) => {
+    if (n.nodeType === 3) { parent.append(n.textContent); return; }
+    if (n.nodeType !== 1) return;
+    const tag = n.tagName.toLowerCase();
+    let el = null;
+    if (tag === "b" || tag === "i") el = document.createElement(tag);
+    if (tag === "a" && /^https?:\/\//i.test(n.getAttribute("href") || "")) {
+      el = document.createElement("a"); el.href = n.getAttribute("href"); el.target = "_blank"; el.rel = "noopener";
+    }
+    if (el) { walk(n, el); parent.append(el); } else walk(n, parent);
+  });
+  walk(doc.body.firstChild, out);
+  const t = document.createElement("span"); t.className = "time"; t.textContent = "08:05 ✓✓"; out.append(t);
+}
+
+document.addEventListener("keydown", (e) => {
+  if (["SELECT", "INPUT", "TEXTAREA"].includes(document.activeElement?.tagName)) return;
+  if (e.key === "ArrowRight") goStep(state.step + 1);
+  if (e.key === "ArrowLeft") goStep(state.step - 1);
+});
+
+/* ---------- inicio ---------- */
+renderOverview();
+$("#foot").textContent = `Datos generados el ${new Date(DATA.generated).toLocaleString("es-AR")} desde news.db · ${fmt(DATA.funnel.con_texto)} notas con texto completo.`;
+if (DATA.days.length) {
+  const fromHash = +(location.hash.match(/^#s(\d+)$/) || [])[1];
+  const first = DATA.stories[fromHash] ? fromHash : DATA.days[0].ids[0];
+  state.day = DATA.stories[first].day;
+  renderPicker();
+  selectStory(first);
+} else {
+  $("#viewer").innerHTML = '<p class="muted">Todavía no hay noticias analizadas. Corré la rutina diaria y volvé a generar el panel.</p>';
+}
+</script>
